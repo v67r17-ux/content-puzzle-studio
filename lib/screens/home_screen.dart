@@ -176,6 +176,7 @@ class _ContentList extends StatelessWidget {
 }
 
 
+
 class _PuzzleList extends StatelessWidget {
   const _PuzzleList({required this.puzzles, required this.onAdd});
 
@@ -193,56 +194,60 @@ class _PuzzleList extends StatelessWidget {
       );
     }
 
-    return ListView.builder(
+    return ListView(
       padding: const EdgeInsets.all(12),
-      itemCount: puzzles.length,
-      itemBuilder: (context, i) {
-        final p = puzzles[i];
-        return Card(
-          child: ListTile(
-            leading: const Icon(Icons.grid_4x4),
-            title: Text(p.title),
-            subtitle: Text(p.type.label),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              Navigator.push(
+      children: [
+        for (final puzzle in puzzles)
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.grid_on),
+              title: Text(puzzle.title),
+              subtitle: Text(puzzle.type.label),
+              trailing: const Icon(Icons.arrow_forward_ios),
+              onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => _SampleCrosswordScreen(title: p.title),
+                  builder: (_) =>
+                      _PlayableSample(title: puzzle.title),
                 ),
-              );
-            },
+              ),
+            ),
           ),
-        );
-      },
+      ],
     );
   }
 }
 
-class _SampleCrosswordScreen extends StatefulWidget {
-  const _SampleCrosswordScreen({required this.title});
+class _PlayableSample extends StatefulWidget {
+  const _PlayableSample({required this.title});
 
   final String title;
 
   @override
-  State<_SampleCrosswordScreen> createState() =>
-      _SampleCrosswordScreenState();
+  State<_PlayableSample> createState() => _PlayableSampleState();
 }
 
-class _SampleCrosswordScreenState extends State<_SampleCrosswordScreen> {
-  final answers = List.generate(3, (_) => TextEditingController());
-  String message = '';
+class _PlayableSampleState extends State<_PlayableSample> {
+  final letters = List.generate(25, (_) => TextEditingController());
+  String result = '';
 
-  final questions = const [
-    ('۱ افقی', 'گیاهی که تنه و شاخه دارد', 'درخت'),
-    ('۲ افقی', 'چیزی که تنفس می‌کنیم', 'هوا'),
-    ('۳ افقی', 'برای نوشیدن و زندگی ضروری است', 'آب'),
-  ];
+  // خانه‌های فعال برای یک نمونهٔ کوچک
+  final active = <int>{
+    1, 2, 3, 4,
+    6, 11, 16,
+    18, 19, 20, 21,
+  };
+
+  final expected = <int, String>{
+    1: 'د', 2: 'ر', 3: 'خ', 4: 'ت',
+    6: 'ر', 11: 'خ', 16: 'ت',
+    18: 'ه', 19: 'و', 20: 'ا', 21: 'ا',
+  };
 
   @override
   void dispose() {
-    for (final controller in answers) {
-      controller.dispose();
+    for (final c in letters) {
+      c.dispose();
     }
     super.dispose();
   }
@@ -252,63 +257,94 @@ class _SampleCrosswordScreenState extends State<_SampleCrosswordScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         children: [
           const Text(
-            'جدول نمونه: محیط زیست',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            'جدول نمونهٔ محیط زیست',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'پاسخ هر سؤال را در کادر مربوط به آن بنویس.',
-          ),
-          const SizedBox(height: 20),
-          ...List.generate(questions.length, (i) {
-            return Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${questions[i].$1}: ${questions[i].$2}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: answers[i],
+          const SizedBox(height: 16),
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate:
+                  const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 5,
+                crossAxisSpacing: 3,
+                mainAxisSpacing: 3,
+              ),
+              itemCount: 25,
+              itemBuilder: (context, i) {
+                if (!active.contains(i)) {
+                  return Container(color: Colors.blueGrey.shade800);
+                }
+
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.teal, width: 1.5),
+                  ),
+                  child: Center(
+                    child: TextField(
+                      controller: letters[i],
+                      textAlign: TextAlign.center,
+                      textDirection: TextDirection.rtl,
+                      maxLength: 1,
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
                       decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'پاسخ',
+                        counterText: '',
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
                       ),
                     ),
-                  ],
-                ),
-              ),
-            );
-          }),
-          const SizedBox(height: 12),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'سؤال‌ها',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const Text('۱. افقی: گیاهی که تنه و شاخه دارد (۴ حرف)'),
+          const Text('۲. عمودی: بخش پایانی کلمهٔ درخت'),
+          const Text('۳. افقی: چیزی که برای زندگی لازم است'),
+          const SizedBox(height: 16),
           FilledButton(
             onPressed: () {
-              final correct = List.generate(
-                questions.length,
-                (i) =>
-                    answers[i].text.trim().replaceAll('ي', 'ی').replaceAll('ك', 'ک') ==
-                    questions[i].$3,
-              ).every((v) => v);
-
+              var correct = true;
+              for (final entry in expected.entries) {
+                final value = letters[entry.key].text.trim()
+                    .replaceAll('ي', 'ی')
+                    .replaceAll('ك', 'ک');
+                if (value != entry.value) {
+                  correct = false;
+                  break;
+                }
+              }
               setState(() {
-                message = correct
-                    ? 'آفرین! همهٔ پاسخ‌ها درست هستند.'
-                    : 'هنوز بعضی پاسخ‌ها درست نیستند. دوباره امتحان کن.';
+                result = correct
+                    ? 'آفرین! پاسخ‌های نمونه درست هستند.'
+                    : 'بعضی خانه‌ها هنوز درست پر نشده‌اند. دوباره امتحان کن.';
               });
             },
             child: const Text('بررسی پاسخ‌ها'),
           ),
-          if (message.isNotEmpty)
+          if (result.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(12),
-              child: Text(message),
+              child: Text(result, textAlign: TextAlign.center),
             ),
         ],
       ),
