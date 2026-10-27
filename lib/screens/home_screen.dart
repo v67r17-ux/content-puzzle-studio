@@ -15,14 +15,14 @@ class ContentController extends StateNotifier<AsyncValue<List<ContentItem>>> {
   final LocalStore store;
   Future<void> load() async { state = AsyncValue.data(await store.loadContent()); }
   Future<void> save(ContentItem item) async {
-    final list = [...(state.valueOrNull ?? [])];
+    final List<ContentItem> list = [...(state.valueOrNull ?? <ContentItem>[])];
     final i = list.indexWhere((x) => x.id == item.id);
     if (i < 0) { list.insert(0, item); } else { list[i] = item; }
     await store.saveContent(list);
     state = AsyncValue.data(list);
   }
   Future<void> delete(String id) async {
-    final list = [...(state.valueOrNull ?? [])]..removeWhere((x) => x.id == id);
+    final List<ContentItem> list = [...(state.valueOrNull ?? <ContentItem>[])]..removeWhere((x) => x.id == id);
     await store.saveContent(list); state = AsyncValue.data(list);
   }
 }
@@ -32,7 +32,7 @@ class PuzzleController extends StateNotifier<AsyncValue<List<Puzzle>>> {
   final LocalStore store;
   Future<void> load() async { state = AsyncValue.data(await store.loadPuzzles()); }
   Future<void> add(Puzzle puzzle) async {
-    final list = [puzzle, ...(state.valueOrNull ?? [])];
+    final List<Puzzle> list = [puzzle, ...(state.valueOrNull ?? <Puzzle>[])];
     await store.savePuzzles(list); state = AsyncValue.data(list);
   }
 }
