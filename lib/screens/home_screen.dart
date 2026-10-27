@@ -175,20 +175,147 @@ class _ContentList extends StatelessWidget {
   }
 }
 
+
 class _PuzzleList extends StatelessWidget {
   const _PuzzleList({required this.puzzles, required this.onAdd});
-  final List<Puzzle> puzzles; final VoidCallback onAdd;
-  @override Widget build(BuildContext context) {
-    if (puzzles.isEmpty) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-      const Icon(Icons.grid_on, size: 56), const SizedBox(height: 12), const Text('هنوز جدولی نساخته‌اید.'),
-      const SizedBox(height: 12), FilledButton(onPressed: onAdd, child: const Text('ساخت اولین جدول')),
-    ]));
-    return ListView.builder(padding: const EdgeInsets.all(12), itemCount: puzzles.length, itemBuilder: (_, i) {
-      final p = puzzles[i];
-      return Card(child: ListTile(leading: const Icon(Icons.grid_4x4), title: Text(p.title), subtitle: Text(p.type.label)));
-    });
+
+  final List<Puzzle> puzzles;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    if (puzzles.isEmpty) {
+      return Center(
+        child: FilledButton(
+          onPressed: onAdd,
+          child: const Text('ساخت اولین جدول'),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: puzzles.length,
+      itemBuilder: (context, i) {
+        final p = puzzles[i];
+        return Card(
+          child: ListTile(
+            leading: const Icon(Icons.grid_4x4),
+            title: Text(p.title),
+            subtitle: Text(p.type.label),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => _SampleCrosswordScreen(title: p.title),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 }
+
+class _SampleCrosswordScreen extends StatefulWidget {
+  const _SampleCrosswordScreen({required this.title});
+
+  final String title;
+
+  @override
+  State<_SampleCrosswordScreen> createState() =>
+      _SampleCrosswordScreenState();
+}
+
+class _SampleCrosswordScreenState extends State<_SampleCrosswordScreen> {
+  final answers = List.generate(3, (_) => TextEditingController());
+  String message = '';
+
+  final questions = const [
+    ('۱ افقی', 'گیاهی که تنه و شاخه دارد', 'درخت'),
+    ('۲ افقی', 'چیزی که تنفس می‌کنیم', 'هوا'),
+    ('۳ افقی', 'برای نوشیدن و زندگی ضروری است', 'آب'),
+  ];
+
+  @override
+  void dispose() {
+    for (final controller in answers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.title)),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const Text(
+            'جدول نمونه: محیط زیست',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'پاسخ هر سؤال را در کادر مربوط به آن بنویس.',
+          ),
+          const SizedBox(height: 20),
+          ...List.generate(questions.length, (i) {
+            return Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${questions[i].$1}: ${questions[i].$2}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: answers[i],
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'پاسخ',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+          const SizedBox(height: 12),
+          FilledButton(
+            onPressed: () {
+              final correct = List.generate(
+                questions.length,
+                (i) =>
+                    answers[i].text.trim().replaceAll('ي', 'ی').replaceAll('ك', 'ک') ==
+                    questions[i].$3,
+              ).every((v) => v);
+
+              setState(() {
+                message = correct
+                    ? 'آفرین! همهٔ پاسخ‌ها درست هستند.'
+                    : 'هنوز بعضی پاسخ‌ها درست نیستند. دوباره امتحان کن.';
+              });
+            },
+            child: const Text('بررسی پاسخ‌ها'),
+          ),
+          if (message.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(message),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 
 class ContentEditorScreen extends StatefulWidget {
   const ContentEditorScreen({super.key, this.item});
