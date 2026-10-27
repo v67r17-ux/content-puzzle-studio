@@ -29,11 +29,38 @@ class ContentController extends StateNotifier<AsyncValue<List<ContentItem>>> {
 
 class PuzzleController extends StateNotifier<AsyncValue<List<Puzzle>>> {
   PuzzleController(this.store) : super(const AsyncValue.loading());
+
   final LocalStore store;
-  Future<void> load() async { state = AsyncValue.data(await store.loadPuzzles()); }
+
+  Future<void> load() async {
+    state = AsyncValue.data(await store.loadPuzzles());
+  }
+
   Future<void> add(Puzzle puzzle) async {
-    final List<Puzzle> list = [puzzle, ...(state.valueOrNull ?? <Puzzle>[])];
-    await store.savePuzzles(list); state = AsyncValue.data(list);
+    final List<Puzzle> list = [
+      puzzle,
+      ...(state.valueOrNull ?? <Puzzle>[]),
+    ];
+    await store.savePuzzles(list);
+    state = AsyncValue.data(list);
+  }
+
+  Future<void> update(Puzzle puzzle) async {
+    final List<Puzzle> list = [...(state.valueOrNull ?? <Puzzle>[])];
+    final index = list.indexWhere((item) => item.id == puzzle.id);
+    if (index == -1) return;
+    list[index] = puzzle;
+    await store.savePuzzles(list);
+    state = AsyncValue.data(list);
+  }
+
+  Future<void> delete(String id) async {
+    final List<Puzzle> list = [
+      ...(state.valueOrNull ?? <Puzzle>[]),
+    ]..removeWhere((item) => item.id == id);
+
+    await store.savePuzzles(list);
+    state = AsyncValue.data(list);
   }
 }
 
