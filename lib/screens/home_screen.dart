@@ -27,6 +27,7 @@ class ContentController extends StateNotifier<AsyncValue<List<ContentItem>>> {
   }
 }
 
+
 class PuzzleController extends StateNotifier<AsyncValue<List<Puzzle>>> {
   PuzzleController(this.store) : super(const AsyncValue.loading());
 
@@ -46,9 +47,12 @@ class PuzzleController extends StateNotifier<AsyncValue<List<Puzzle>>> {
   }
 
   Future<void> update(Puzzle puzzle) async {
-    final List<Puzzle> list = [...(state.valueOrNull ?? <Puzzle>[])];
+    final List<Puzzle> list = [
+      ...(state.valueOrNull ?? <Puzzle>[]),
+    ];
     final index = list.indexWhere((item) => item.id == puzzle.id);
-    if (index == -1) return;
+    if (index < 0) return;
+
     list[index] = puzzle;
     await store.savePuzzles(list);
     state = AsyncValue.data(list);
